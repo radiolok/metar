@@ -1,0 +1,3 @@
+[submodule "avr-fota"]
+	path = avr-fota
+	url = git@github.com:radiolok/avr-fota.git
