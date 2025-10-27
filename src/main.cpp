@@ -13,6 +13,20 @@
 
 #include "krams.h"
 #include "weather.h"
+#ifdef degrees
+#undef degrees
+#endif
+#ifdef HIGH
+#undef HIGH
+#endif
+#ifdef LOW
+#undef LOW
+#endif
+#include "metaf.hpp"
+using namespace metaf;
+std::string report =
+    "KDDC 112052Z AUTO 19023G34KT 7SM CLR 33/16 A2992"
+    " RMK AO2 PK WND 20038/2033 SLP096 T03330156 58018";
 
 Ticker _secondEERtos;
 void usecondTick();
@@ -52,6 +66,8 @@ void setup() {
     TerminalInit();
 
     setup_meteo();
+
+    const auto result = Parser::parse(report);
 }
 
 void loop() {
