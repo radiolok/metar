@@ -1,6 +1,0 @@
-[submodule "metar_c_decoder"]
-	path = metar_c_decoder
-	url = git@github.com:radiolok/metar_c_decoder.git
-[submodule "metaf"]
-	path= metaf
-	url = git@github.com:nnaumenko/metaf.git
