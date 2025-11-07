@@ -7,6 +7,8 @@
 #define CLOCK_PIN 12
 #define PREP_PIN 13
 
+#include "Metar.h"
+using namespace Storage_B::Weather;
 
 typedef struct {
     uint8_t high;
@@ -79,7 +81,7 @@ typedef struct {
     dword_t rsvd_1;//61-64
 } message_t;
 
-void metar_loop();
+void metar_loop(std::shared_ptr<Metar> metar_ptr);
 void setup_meteo();
 void send_message(const message_t& message);
 void send_code(uint8_t code);

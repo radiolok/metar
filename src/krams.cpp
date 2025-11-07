@@ -54,6 +54,7 @@ void convert_temp(int8_t temp, dword_t& code){
 }
 
 void convert_data(const data_t& data, message_t& _message){
+    Serial.printf("convert_data\n");
     convert_word(data.hours, _message.hours);
     convert_word(data.minutes, _message.minutes);
     convert_word(data.wind_dir, _message.wind_dir);
@@ -83,21 +84,22 @@ void convert_data(const data_t& data, message_t& _message){
 
 inline void send_one(){
     digitalWrite(CLOCK_PIN, HIGH);
-    delay(1);
+    delay(4);
     digitalWrite(CLOCK_PIN, LOW);
-    delay(1);
+    delay(2);
 }
 
 inline void send_zero(){
     digitalWrite(CLOCK_PIN, HIGH);
     digitalWrite(CODE_0_PIN, HIGH);
-    delay(1);
+    delay(4);
     digitalWrite(CODE_0_PIN, LOW);
     digitalWrite(CLOCK_PIN, LOW);
-    delay(1);
+    delay(2);
 }
 
 void send_code(uint8_t code) {
+    Serial.printf("%x ", code);
     //start bit:
     send_one();
     //Five data bits from lowest one:
@@ -114,10 +116,11 @@ void send_code(uint8_t code) {
 }
 
 void send_message(const message_t& message) {
+    Serial.printf("send_message\n");
     digitalWrite(PREP_PIN, HIGH);
-    delay(5);
+    delay(30);
     digitalWrite(PREP_PIN, LOW);
-    delay(1);
+    delay(4);
     uint8_t* data = (uint8_t*)&message;
     for (uint8_t i = 0; i < sizeof(message_t); ++i){
         send_code(*(data + i));
@@ -128,11 +131,22 @@ data_t metar_data;
 message_t metar_message;
 
 
-void metar_loop() {
-    uint8_t* data = (uint8_t*)&metar_data;
-    for (uint8_t i = 0; i < sizeof(data_t); ++i){
-        data[i] = i % 10;
-    }
+static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_data){
+     Serial.printf("Hour: ");
+    _metar_data.hours = _metar_ptr->Hour().value();
+    Serial.printf("%d\nMinute: ", _metar_data.hours);
+    _metar_data.minutes = _metar_ptr->Minute().value();
+    Serial.printf("%d\nWindDirection: ", _metar_data.minutes );
+    _metar_data.wind_dir = _metar_ptr->WindDirection().value();
+    Serial.printf("%d\nWindSpeed: ", _metar_data.wind_dir);
+    _metar_data.wind_speed = _metar_ptr->WindSpeed().value();
+    Serial.printf("%d\nVisibility: ", _metar_data.wind_speed);
+    _metar_data.distanse_meteo = _metar_ptr->Visibility().value();
+    Serial.printf("%d\n", _metar_data.distanse_meteo);
+}
+
+void metar_loop(std::shared_ptr<Metar> metar_ptr) {
+    metar_to_krams(metar_ptr, metar_data);
     convert_data(metar_data, metar_message);
     send_message(metar_message);
 }

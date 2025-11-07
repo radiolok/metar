@@ -13,16 +13,13 @@
 
 #include "krams.h"
 #include "weather.h"
-#include "Metar.h"
-using namespace Storage_B::Weather;
-const char* report =
-    "METAR KDDC 112052Z AUTO 19023G34KT 7SM CLR 33/16 A2992"
-    " RMK AO2 PK WND 20038/2033 SLP096 T03330156 58018";
 
 Ticker _secondEERtos;
 void usecondTick();
 void secondTick();
 void tenSecondTick();
+
+std::shared_ptr<Metar> metar_ptr;
 
 void setup() {
     Serial.begin(115200);
@@ -58,10 +55,6 @@ void setup() {
 
     setup_meteo();
 
-    auto metar = Metar::Create(report);
-    if (metar) {
-        Serial.println("METAR parsed successfully");
-    }
 }
 
 void loop() {
@@ -76,9 +69,11 @@ void usecondTick()  {
 
 
 void secondTick() {
-   metar_loop();
 }
 
 void tenSecondTick() {
-    update_weather();
+    metar_ptr = update_weather("UWGG");
+    if (metar_ptr){
+        metar_loop(metar_ptr);
+   }
 }

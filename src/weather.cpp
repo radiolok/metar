@@ -1,5 +1,6 @@
 #include "weather.h"
 
+static std::shared_ptr<Metar> metar_ptr;
 
 String get_metar_data(const String& icao_code) {
     // Формируем URL запроса
@@ -34,24 +35,31 @@ String get_metar_data(const String& icao_code) {
 }
 
 // Пример использования в коде:
-void update_weather() {
-    String metar = get_metar_data("UWGG");
+std::shared_ptr<Metar> update_weather(const String& icao_code) {
+    String metar_str = get_metar_data(icao_code);
 
-    if (!metar.isEmpty()) {
+    if (!metar_str.isEmpty()) {
         Serial.println("METAR data received:");
-        Serial.println(metar);
+        Serial.println(metar_str);
 
         // Здесь можно парсить данные
         // Пример: первая строка - дата, вторая - собственно METAR
-        int newlinePos = metar.indexOf('\n');
+        int newlinePos = metar_str.indexOf('\n');
         if (newlinePos != -1) {
-            String observation_time = metar.substring(0, newlinePos);
-            String metar_text = metar.substring(newlinePos + 1);
+            String observation_time = metar_str.substring(0, newlinePos);
+            String metar_text = metar_str.substring(newlinePos + 1);
 
             Serial.println("Observation time: " + observation_time);
             Serial.println("METAR: " + metar_text);
         }
+
+        metar_ptr = Metar::Create(metar_str.c_str());
+        if (metar_ptr) {
+            Serial.println("METAR parsed successfully");
+        }
+        return metar_ptr;
     } else {
         Serial.println("Failed to get METAR data");
     }
+    return 0;
 }
