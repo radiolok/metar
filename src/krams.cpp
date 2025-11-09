@@ -2,6 +2,7 @@
 #define CODE_0_PIN 15
 #define CLOCK_PIN 12
 #define PREP_PIN 13
+#define LINE_PIN 14
 
 #include "krams.h"
 
@@ -16,14 +17,15 @@ static uint8_t codes[] = {
     0x03, //7
     0x13, //8
     0x1C, //9
-    0x07, //-
-    0x1B //space
+    0x07 //-
 };
 
 void setup_meteo() {
     pinMode(CODE_0_PIN, OUTPUT);
     pinMode(CLOCK_PIN, OUTPUT);
     pinMode(PREP_PIN, OUTPUT);
+    pinMode(LINE_PIN, OUTPUT);
+    digitalWrite(LINE_PIN, LOW);
 }
 
 uint8_t convert_byte(int8_t data){
@@ -33,7 +35,7 @@ uint8_t convert_byte(int8_t data){
     if (data < 10) {
         return codes[data];//digit
     }
-    return codes[11];//space
+    return codes[0];//space
 }
 
 void convert_word(int8_t data, word_t& code){
@@ -48,9 +50,10 @@ void convert_dword(int16_t data, dword_t& code){
 
 void convert_temp(int8_t temp, dword_t& code){
     uint8_t temp_abs = (temp < 0) ? -temp : temp;
-    code.high.low = convert_byte(temp_abs % 10);
+    code.low.low = convert_byte(temp_abs % 10);
     code.low.high = convert_byte(temp_abs / 10);
-    code.low.low = (temp < 0 ) ? convert_byte(-1) : convert_byte(11);
+    code.high.high = (temp < 0 ) ? convert_byte(-1) : convert_byte(0);
+    code.high.low = convert_byte(0);
 }
 
 void convert_data(const data_t& data, message_t& _message){
@@ -80,32 +83,33 @@ void convert_data(const data_t& data, message_t& _message){
     _message.bi_ice = convert_byte(data.bi_ice);
     _message.rta_thunder = convert_byte(data.rta_thunder);
     _message.rta_ice = convert_byte(data.rta_ice);
+    convert_dword(0, _message.rsvd_1);
 }
 
 inline void send_one(){
     digitalWrite(CLOCK_PIN, HIGH);
-    delay(4);
-    digitalWrite(CLOCK_PIN, LOW);
     delay(2);
+    digitalWrite(CLOCK_PIN, LOW);
+    delay(1);
 }
 
 inline void send_zero(){
     digitalWrite(CLOCK_PIN, HIGH);
-    digitalWrite(CODE_0_PIN, HIGH);
-    delay(4);
     digitalWrite(CODE_0_PIN, LOW);
-    digitalWrite(CLOCK_PIN, LOW);
     delay(2);
+    digitalWrite(CLOCK_PIN, LOW);
+    delayMicroseconds(200);
+    digitalWrite(CODE_0_PIN, HIGH);
+    delay(1);
 }
 
 void send_code(uint8_t code) {
     Serial.printf("%x ", code);
     //start bit:
+    delay(4);
     send_one();
-    //Five data bits from lowest one:
-    for (uint8_t i = 0; i < 5; ++i){
-        uint8_t bit = (code >> i) & 0x01;
-        if (bit){
+    for (int i = 4; i >= 0; i--) {
+        if (code & (1 << i)) {
             send_one();
         } else {
             send_zero();
@@ -115,16 +119,25 @@ void send_code(uint8_t code) {
     send_zero();
 }
 
+#define MESSAGE_LENGTH (47)
+
+
 void send_message(const message_t& message) {
     Serial.printf("send_message\n");
-    digitalWrite(PREP_PIN, HIGH);
-    delay(30);
+    digitalWrite(CODE_0_PIN, LOW);
+    delay(300);
+    digitalWrite(LINE_PIN, HIGH);
+    delay(10);
     digitalWrite(PREP_PIN, LOW);
+    digitalWrite(CODE_0_PIN, HIGH);
+    delay(30);
+    digitalWrite(PREP_PIN, HIGH);
     delay(4);
     uint8_t* data = (uint8_t*)&message;
-    for (uint8_t i = 0; i < sizeof(message_t); ++i){
+    for (uint8_t i = 0; i < MESSAGE_LENGTH; ++i){
         send_code(*(data + i));
     }
+    digitalWrite(LINE_PIN, LOW);
 }
 
 data_t metar_data;
@@ -132,17 +145,16 @@ message_t metar_message;
 
 
 static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_data){
-     Serial.printf("Hour: ");
-    _metar_data.hours = _metar_ptr->Hour().value();
-    Serial.printf("%d\nMinute: ", _metar_data.hours);
-    _metar_data.minutes = _metar_ptr->Minute().value();
-    Serial.printf("%d\nWindDirection: ", _metar_data.minutes );
-    _metar_data.wind_dir = _metar_ptr->WindDirection().value();
-    Serial.printf("%d\nWindSpeed: ", _metar_data.wind_dir);
-    _metar_data.wind_speed = _metar_ptr->WindSpeed().value();
-    Serial.printf("%d\nVisibility: ", _metar_data.wind_speed);
-    _metar_data.distanse_meteo = _metar_ptr->Visibility().value();
-    Serial.printf("%d\n", _metar_data.distanse_meteo);
+    _metar_data.hours = _metar_ptr->Hour().value_or(0);
+    _metar_data.minutes = _metar_ptr->Minute().value_or(0);
+    Serial.printf("Time: %d:%d\n", _metar_data.hours, _metar_data.minutes);
+    _metar_data.wind_dir = _metar_ptr->WindDirection().value_or(0);
+    _metar_data.wind_speed = _metar_ptr->WindSpeed().value_or(0);
+    Serial.printf("Wind: %dkm/s, Dir: %d\n", _metar_data.wind_speed, _metar_data.wind_dir);
+    _metar_data.distanse_meteo = _metar_ptr->Visibility().value_or(0);
+    Serial.printf("Wisibility: %d\n", _metar_data.distanse_meteo);
+    _metar_data.temperature = _metar_ptr->Temperature().value_or(0);
+    Serial.printf("Temperature: %d\n", _metar_data.temperature);
 }
 
 void metar_loop(std::shared_ptr<Metar> metar_ptr) {
