@@ -4,6 +4,8 @@
 #define PREP_PIN 13
 #define LINE_PIN 14
 
+#define DELAY_US (20)
+
 #include "krams.h"
 
 static uint8_t codes[] = {
@@ -88,25 +90,24 @@ void convert_data(const data_t& data, message_t& _message){
 
 inline void send_one(){
     digitalWrite(CLOCK_PIN, HIGH);
-    delay(2);
+    delayMicroseconds(DELAY_US*2);
     digitalWrite(CLOCK_PIN, LOW);
-    delay(1);
+    delayMicroseconds(DELAY_US*1);
 }
 
 inline void send_zero(){
     digitalWrite(CLOCK_PIN, HIGH);
     digitalWrite(CODE_0_PIN, LOW);
-    delay(2);
+    delayMicroseconds(DELAY_US*2);
     digitalWrite(CLOCK_PIN, LOW);
-    delayMicroseconds(200);
     digitalWrite(CODE_0_PIN, HIGH);
-    delay(1);
+    delayMicroseconds(DELAY_US*1);
 }
 
 void send_code(uint8_t code) {
     Serial.printf("%x ", code);
     //start bit:
-    delay(4);
+    delayMicroseconds(DELAY_US*2);
     send_one();
     for (int i = 4; i >= 0; i--) {
         if (code & (1 << i)) {
@@ -125,14 +126,14 @@ void send_code(uint8_t code) {
 void send_message(const message_t& message) {
     Serial.printf("send_message\n");
     digitalWrite(CODE_0_PIN, LOW);
-    delay(300);
+    delayMicroseconds(DELAY_US*2);
     digitalWrite(LINE_PIN, HIGH);
-    delay(10);
+    delayMicroseconds(DELAY_US*20);
     digitalWrite(PREP_PIN, LOW);
     digitalWrite(CODE_0_PIN, HIGH);
-    delay(30);
+    delayMicroseconds(DELAY_US*20);
     digitalWrite(PREP_PIN, HIGH);
-    delay(4);
+    delayMicroseconds(DELAY_US*2);
     uint8_t* data = (uint8_t*)&message;
     for (uint8_t i = 0; i < MESSAGE_LENGTH; ++i){
         send_code(*(data + i));
