@@ -26,7 +26,6 @@ void setup() {
     delay(1000);
     InitRTOS(); // init eertos
     _secondEERtos.attach_ms(1, &usecondTick); // init eertos time manager
-    _secondEERtos.attach_ms(1000, &secondTick); // init eertos time manager
     _secondEERtos.attach_ms(10000, &tenSecondTick); // init eertos time manager
     // SetTask(TaskBlink1); // do blink
     SPIFFS.begin(); // Not really needed, checked inside library and started if
@@ -65,10 +64,6 @@ void loop() {
 
 void usecondTick()  {
     TimerService();
-}
-
-
-void secondTick() {
 }
 
 void tenSecondTick() {

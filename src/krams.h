@@ -7,14 +7,19 @@
 #define CLOCK_PIN 12
 #define PREP_PIN 13
 
+#include <map>
 #include "Metar.h"
 using namespace Storage_B::Weather;
 
 typedef struct {
-    uint8_t high;
     uint8_t low;
+    uint8_t high;
 }    word_t;
 
+typedef struct {
+    word_t low;
+    uint8_t high;
+}    tword_t;
 
 typedef struct {
     word_t low;
@@ -57,28 +62,24 @@ typedef struct {
     word_t minutes;     //3 - 4
     word_t wind_dir;    //5 - 6
     word_t wind_speed;  //7 - 8
-    word_t wind_max;    //9 - 10
-    word_t rwy_max_speed; //11 -12
+    dword_t pressure_mbar;//9 - 12
     uint8_t clouds;     //13
-    uint8_t clouds_low_level;//14
-    word_t clouds_form; //15 - 16
-    dword_t clouds_heigth; //17 - 20
-    dword_t pressure_torr; //21-24
-    dword_t distanse_meteo;//25-28
-    dword_t distanse_l1;//29-32
-    dword_t distanse_l2; //33-36
-    dword_t distanse_l3; //37-40
-    dword_t temperature; //41-44
-    dword_t humidity;   //45-48
-    dword_t pressure_mbar;//49-52
-    uint8_t forecast;   //53
-    uint8_t telegram_name; //54
-    word_t number_bd;//55-56
-    uint8_t bi_thunder;//57
-    uint8_t bi_ice;//58
-    uint8_t rta_thunder;//59
-    uint8_t rta_ice;//60
-    dword_t rsvd_1;//61-64
+    tword_t humidity;   //14-16
+    tword_t temperature; //17-19
+    uint8_t clouds_low_level;//20
+    word_t wind_max;    //21 - 22
+    uint8_t bi_thunder;//23
+    uint8_t forecast;   //24
+    uint8_t telegram_name; //25
+    uint8_t number_bd;//26
+    tword_t clouds_heigth; //27 - 29
+    tword_t pressure_torr; //30 - 32
+    tword_t distanse_l1;//33 - 35
+    tword_t distanse_l2; //36 - 38
+    tword_t distanse_l3; //39 - 41
+    tword_t distanse_meteo;//42 - 44
+    word_t rwy_max_speed; //45 - 46
+    uint8_t bi_ice;//47
 } message_t;
 
 void metar_loop(std::shared_ptr<Metar> metar_ptr);
