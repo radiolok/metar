@@ -5,6 +5,8 @@ static std::shared_ptr<Metar> metar_ptr;
 String get_metar_data(const String& icao_code) {
     // Формируем URL запроса
     String url = "https://tgftp.nws.noaa.gov/data/observations/metar/stations/" + icao_code + ".TXT";
+    //String url = "https://aviationweather.gov/api/data/metar?ids=" + icao_code + "&format=raw";
+
 
     WiFiClientSecure client;
     HTTPClient http;

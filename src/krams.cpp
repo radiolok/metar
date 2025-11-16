@@ -40,7 +40,7 @@ uint8_t convert_byte(int8_t data){
     if (data < 10) {
         return codes[data];//digit
     }
-    return codes[10];//space
+    return codes[10];//-
 }
 
 void convert_word(int8_t data, word_t& code){
@@ -200,8 +200,8 @@ static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_dat
         case (Metar::speed_units::KT):
         speedkoef = 1.852;
             break;
-        case (Metar::speed_units::MPS):
-            speedkoef = 1.60934;
+        case (Metar::speed_units::KPH):
+            speedkoef = 0.27;
             break;
     };
     _metar_data.wind_dir = _metar_ptr->WindDirection().value_or(0);

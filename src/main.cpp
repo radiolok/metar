@@ -67,7 +67,8 @@ void usecondTick()  {
 }
 
 void tenSecondTick() {
-    metar_ptr = update_weather("UWGG");
+    String icao = ESPHTTPServer.getMetar();
+    metar_ptr = update_weather(icao);
     if (metar_ptr){
         metar_loop(metar_ptr);
    }
