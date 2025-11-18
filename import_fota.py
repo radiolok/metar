@@ -18,6 +18,7 @@ def merge_filesystems():
     # Пути к папкам с данными
     project_data = env.subst("$PROJECT_DATA_DIR")
     lib_data = os.path.join(get_library_path("avr-fota"), "data")
+    metar_data = os.path.join(env["PROJECT_DIR"], "data")
     temp_data = os.path.join(env["PROJECT_DIR"], "merged_data")
 
     # Создаем временную папку
@@ -47,9 +48,10 @@ def merge_filesystems():
         print("\n📥 Copying library data:")
         # Маски файлов для копирования
         patterns = [
-            "config.json",
+            "*.json",
             "*.js",
             "*.html",
+            "*.css",
             "*.gif"
         ]
 
@@ -63,6 +65,29 @@ def merge_filesystems():
 
                 shutil.copy2(src, dst)
                 print(f"  → {rel_path}")
+
+    # Копируем выборочные файлы из библиотеки
+    if os.path.exists(metar_data):
+        print("\n📥 Copying library data:")
+        # Маски файлов для копирования
+        patterns = [
+            "*.json",
+            "*.js",
+            "*.html",
+            "*.gif"
+        ]
+
+        for pattern in patterns:
+            for src in glob.glob(os.path.join(metar_data, pattern), recursive=True):
+                rel_path = os.path.relpath(src, metar_data)
+                dst = os.path.join(temp_data, rel_path)
+
+                # Создаем директории при необходимости
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+                shutil.copy2(src, dst)
+                print(f"  → {rel_path}")
+
 
     # Переопределяем путь к данным
     env["PROJECT_DATA_DIR"] = temp_data

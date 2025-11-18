@@ -73,8 +73,8 @@ void convert_dword(int16_t data, dword_t& code){
 void convert_temp(int8_t temp, tword_t& code){
     uint8_t temp_abs = (temp < 0) ? -temp : temp;
     code.high = convert_byte(temp_abs % 10);
-    code.low.low = convert_byte(temp_abs / 10);
-    code.low.high = (temp < 0 ) ? convert_byte(8) : convert_byte(10);
+    code.low.high = convert_byte(temp_abs / 10);
+    code.low.low = (temp < 0 ) ? convert_byte(1) : convert_byte(10);
 }
 
 void convert_data(const data_t& data, message_t& _message){
@@ -205,6 +205,7 @@ static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_dat
             break;
     };
     _metar_data.wind_dir = _metar_ptr->WindDirection().value_or(0);
+    _metar_data.wind_dir /= 10;
     _metar_data.wind_speed = _metar_ptr->WindSpeed().value_or(0) * speedkoef;
     Serial.printf("Wind: %dkm/h, Dir: %d\n", _metar_data.wind_speed, _metar_data.wind_dir);
     if (_metar_ptr->isVariableWindDirection()){
@@ -213,8 +214,10 @@ static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_dat
     } else {
         _metar_data.wind_max = -1;
     }
-
     _metar_data.distanse_meteo = _metar_ptr->Visibility().value_or(0) ;
+    if (_metar_ptr->isCAVOK()){
+        _metar_data.distanse_meteo = 9999;
+    }
     Serial.printf("Wisibility: %d\n", _metar_data.distanse_meteo);
     _metar_data.distanse_meteo  = _metar_data.distanse_meteo  / 10;
     _metar_data.clouds_heigth = _metar_ptr->VerticalVisibility().value_or(-1);
@@ -254,6 +257,7 @@ static void metar_to_krams(std::shared_ptr<Metar> _metar_ptr, data_t& _metar_dat
 
     _metar_data.rwy_max_speed = -1;
     _metar_data.number_bd = -1;
+
 }
 
 void metar_loop(std::shared_ptr<Metar> metar_ptr) {

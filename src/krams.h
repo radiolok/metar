@@ -30,7 +30,7 @@ typedef struct {
 typedef struct {
     int8_t hours;       //1 - 2
     int8_t minutes;     //3 - 4
-    int8_t wind_dir;    //5 - 6
+    int16_t wind_dir;    //5 - 6
     int8_t wind_speed;  //7 - 8
     int8_t wind_max;    //9 - 10
     int8_t rwy_max_speed; //11 -12
